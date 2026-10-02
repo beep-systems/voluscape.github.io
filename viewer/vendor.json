@@ -1,0 +1,24 @@
+{
+  "package": "@playcanvas/supersplat-viewer",
+  "version": "1.36.2",
+  "engineVersion": "2.22.6",
+  "engineRevision": "dfcc50f",
+  "tarball": "https://registry.npmjs.org/@playcanvas/supersplat-viewer/-/supersplat-viewer-1.36.2.tgz",
+  "integrity": "sha512-L7w0BlagAonRHQg5qhaDyBB8zrRtiU9QgglNU3kUgsqHpokCAtuf9j4P0kxsUaQn61FZ1qJGkRKsOCbrLCDR0w==",
+  "archiveSha256": "a3bb9fe033267b6e8665b9486944fa2f53e12b7d77a2eabcbce6394bd81dc3e2",
+  "files": {
+    "index.html": "51b6aec5891ad699bb3feb6788303daa318a391f6faba287cf84f7f38170ad50",
+    "index.css": "92e50eab13d86bb6bd32ee62e0b60a42d25cd2047e49cc67d53d49e20d71c1da",
+    "index.js": "313b5e12c73327c44a25be1b7135227361d5a50b85cae903b479a72c6db4304b",
+    "LICENSE": "44716a2a1040df078772702d677d46f7d97f40c2375bf8221d4b3b741143f823",
+    "PLAYCANVAS-LICENSE": "42fa51ddd556be151a29f381fb97ee975825dcc454e805ea3ea9c079cca04d34",
+    "settings.json": "c9fbe33244e80311db4ea75ee6d28b5f86448ca2f54dad66bc76671e3dd84c14",
+    "framing.js": "2f957f07bcdc4453d9dcb57bfac0a8ddfb98198e4762512559185539743c2b8a",
+    "framing.patch": "ef0fba1df2dae078fc11f91c09ac51ea7eb958753bd8807af58c956b81922c8d"
+  },
+  "upstreamFiles": {
+    "index.js": "dc22b4a2c813747cb68f0bc43cc735eeb84ec458682e37358cc93f078d1d7fe7",
+    "index.html": "21381017582935284d114befef0a41281d9bd4d4c532eb9b1b24b6a48328fc95"
+  },
+  "localPatch": "framing.patch (dynamic world-space framing and full-geometry clipping; see THIRD-PARTY.md)"
+}

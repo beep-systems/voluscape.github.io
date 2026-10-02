@@ -1,0 +1,16 @@
+{
+  "name": "voluscape-gallery",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "serve": "node scripts/serve.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "build": "node scripts/build.mjs",
+    "content": "node scripts/build.mjs --content",
+    "posters": "node scripts/posters.mjs",
+    "test:browser": "node tests/browser.mjs",
+    "test:scenes": "node tests/framing-browser.mjs",
+    "test:mobile": "node tests/mobile-browser.mjs"
+  },
+  "engines": { "node": ">=20" }
+}

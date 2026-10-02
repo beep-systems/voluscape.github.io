@@ -1,0 +1,121 @@
+[
+  {
+    "id": "ch",
+    "title": "Chapel",
+    "video": "web-video/ch-720p.mp4",
+    "poster": "assets/posters/ch.jpg",
+    "sizeBytes": 21035320,
+    "results": [
+      {
+        "id": "sog",
+        "label": "SOG",
+        "scene": "scenes/ch.sog",
+        "sizeBytes": 18683060,
+        "gaussians": 905378
+      }
+    ],
+    "description": "A small chapel with a tiered red roof, surrounded by trees and paths."
+  },
+  {
+    "id": "hs",
+    "title": "Abandoned building",
+    "video": "web-video/hs-720p.mp4",
+    "poster": "assets/posters/hs.jpg",
+    "sizeBytes": 26630340,
+    "results": [
+      {
+        "id": "sog",
+        "label": "SOG",
+        "scene": "scenes/hs.sog",
+        "sizeBytes": 18420032,
+        "gaussians": 897355
+      }
+    ],
+    "description": "A large rectangular building with a weathered roof and open central courtyard."
+  },
+  {
+    "id": "qt",
+    "title": "Residential neighborhood",
+    "video": "web-video/qt-720p.mp4",
+    "poster": "assets/posters/qt.jpg",
+    "sizeBytes": 33434443,
+    "results": [
+      {
+        "id": "sog",
+        "label": "SOG",
+        "scene": "scenes/qt.sog",
+        "sizeBytes": 19233433,
+        "gaussians": 928255
+      }
+    ],
+    "description": "A residential neighborhood with detached houses, gardens and ongoing construction."
+  },
+  {
+    "id": "rd",
+    "title": "Roundabout",
+    "video": "web-video/rd-720p.mp4",
+    "poster": "assets/posters/rd.jpg",
+    "sizeBytes": 66860676,
+    "results": [
+      {
+        "id": "sog",
+        "label": "SOG",
+        "scene": "scenes/rd.sog",
+        "sizeBytes": 19910180,
+        "gaussians": 999946
+      }
+    ],
+    "description": "An urban roundabout bordered by red-roofed buildings and railway tracks."
+  },
+  {
+    "id": "sl",
+    "title": "Grain silos",
+    "video": "web-video/sl-720p.mp4",
+    "poster": "assets/posters/sl.jpg",
+    "sizeBytes": 39415765,
+    "results": [
+      {
+        "id": "sog",
+        "label": "SOG",
+        "scene": "scenes/sl.sog",
+        "sizeBytes": 20373311,
+        "gaussians": 999928
+      }
+    ],
+    "description": "A group of tall cylindrical grain silos with an adjoining elevator tower."
+  },
+  {
+    "id": "tw",
+    "title": "Water tower",
+    "video": "web-video/tw-720p.mp4",
+    "poster": "assets/posters/tw.jpg",
+    "sizeBytes": 14513316,
+    "results": [
+      {
+        "id": "sog",
+        "label": "SOG",
+        "scene": "scenes/tw.sog",
+        "sizeBytes": 16220990,
+        "gaussians": 793790
+      }
+    ],
+    "description": "A cylindrical water tower beside railway tracks and nearby buildings."
+  },
+  {
+    "id": "wh",
+    "title": "Industrial buildings",
+    "video": "web-video/wh-720p.mp4",
+    "poster": "assets/posters/wh.jpg",
+    "sizeBytes": 34648817,
+    "results": [
+      {
+        "id": "sog",
+        "label": "SOG",
+        "scene": "scenes/wh.sog",
+        "sizeBytes": 20075096,
+        "gaussians": 999900
+      }
+    ],
+    "description": "Low-rise industrial buildings with weathered roofs beside residential streets."
+  }
+]

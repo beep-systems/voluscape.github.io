@@ -1,0 +1,152 @@
+diff --git a/viewer/index.js b/viewer/index.js
+index e7ebac0..e25470b 100644
+--- a/viewer/index.js
++++ b/viewer/index.js
+@@ -1,3 +1,6 @@
++// VoluScape local patch: dynamic display framing (see THIRD-PARTY.md).
++import { framePose, validBounds } from './framing.js';
++
+ const TRACEID_GPU_TIMINGS = "GpuTimings";
+ 
+ const version$1 = "2.22.6";
+@@ -87577,10 +87580,13 @@ const createCamera = (position, target, fov) => {
+     result.fov = fov;
+     return result;
+ };
+-const createFrameCamera = (bbox, fov) => {
+-    const sceneSize = bbox.halfExtents.length();
+-    const distance = sceneSize / Math.sin((fov / 180) * Math.PI * 0.5);
+-    return createCamera(new Vec3(2, 1, 2).normalize().mulScalar(distance).add(bbox.center), bbox.center, fov);
++const createFrameCamera = (bbox, fov, width, height, options = {}) => {
++    const bounds = options.bounds ?? {
++        min: [bbox.center.x - bbox.halfExtents.x, bbox.center.y - bbox.halfExtents.y, bbox.center.z - bbox.halfExtents.z],
++        max: [bbox.center.x + bbox.halfExtents.x, bbox.center.y + bbox.halfExtents.y, bbox.center.z + bbox.halfExtents.z]
++    };
++    const pose = framePose(bounds, options.direction ?? [2, 1, 2], fov, width, height, options.padding ?? 1.1);
++    return pose ? createCamera(new Vec3(pose.position), new Vec3(pose.target), fov) : null;
+ };
+ class CameraManager {
+     update;
+@@ -87601,12 +87607,18 @@ class CameraManager {
+     setCollision;
+     // holds the camera state
+     camera = new Camera();
+-    constructor(global, bbox, collision = null) {
++    constructor(global, bbox, collision = null, refreshBounds = () => {}) {
+         const { events, settings, state } = global;
+         let walkAllowed = isWalkAllowed(bbox, collision);
+         const camera0 = settings.cameras[0]?.initial;
+         const defaultFov = camera0?.fov ?? DEFAULT_CAMERA_FOV;
+-        const frameCamera = createFrameCamera(bbox, defaultFov);
++        const device = global.app.graphicsDevice;
++        let framingOptions = {
++            direction: camera0 ? camera0.position.map((value, axis) => value - camera0.target[axis]) : [2, 1, 2]
++        };
++        if (Math.hypot(...framingOptions.direction) < 1e-8) framingOptions.direction = [2, 1, 2];
++        const frameCamera = createFrameCamera(bbox, defaultFov, device.width, device.height, framingOptions) ??
++            createCamera(new Vec3(2, 1, 2), new Vec3(), defaultFov);
+         const resetCamera = camera0
+             ? createCamera(new Vec3(camera0.position), new Vec3(camera0.target), camera0.fov)
+             : frameCamera;
+@@ -87740,14 +87752,26 @@ class CameraManager {
+             }
+         };
+         // handle input events
+-        events.on('inputEvent', (eventName) => {
++        events.on('inputEvent', (eventName, frameOptions) => {
+             switch (eventName) {
+-                case 'frame':
++                case 'frame': {
++                    refreshBounds();
++                    // Persist geometry/direction, never the one-shot immediate flag.
++                    const { immediate = false, ...parameters } = frameOptions ?? {};
++                    framingOptions = { ...framingOptions, ...parameters };
++                    const framed = createFrameCamera(bbox, defaultFov, device.width, device.height, framingOptions);
++                    if (!framed) break;
+                     events.fire('orbitTarget:clear');
+                     state.cameraMode = 'orbit';
+-                    controllers.orbit.goto(frameCamera);
+-                    startTransition();
++                    if (immediate) {
++                        this.camera.copy(framed);
++                        this.snap();
++                    } else {
++                        controllers.orbit.goto(framed);
++                        startTransition();
++                    }
+                     break;
++                }
+                 case 'reset':
+                     if (state.cameraMode === 'walk') {
+                         walkSource.cancel();
+@@ -97484,7 +97508,28 @@ class Viewer {
+                 prevProj.copy(proj);
+             }
+         });
++        const refreshSceneBounds = () => {
++            // Clipping uses full geometry, not the trimmed framing bounds.
++            let first = true;
++            const transformed = new BoundingBox();
++            for (const component of app.root.findComponents('gsplat')) {
++                const local = component.customAabb;
++                if (!local) continue;
++                transformed.setFromTransformedAabb(local, component.entity.getWorldTransform());
++                const min = transformed.getMin();
++                const max = transformed.getMax();
++                if (!validBounds({ min: [min.x, min.y, min.z], max: [max.x, max.y, max.z] })) continue;
++                if (first) sceneBound.copy(transformed);
++                else sceneBound.add(transformed);
++                first = false;
++            }
++            if (first) {
++                sceneBound.center.set(0, 0, 0);
++                sceneBound.halfExtents.set(0, 0, 0);
++            }
++        };
+         const applyCamera = (camera) => {
++            refreshSceneBounds();
+             const cameraEntity = global.camera;
+             cameraEntity.setPosition(camera.position);
+             cameraEntity.setEulerAngles(camera.angles);
+@@ -97650,10 +97695,7 @@ class Viewer {
+                 return;
+             const gsplatComponent = results[0].gsplat;
+             // get scene bounding box
+-            const gsplatBbox = gsplatComponent.customAabb;
+-            if (gsplatBbox) {
+-                sceneBound.setFromTransformedAabb(gsplatBbox, results[0].getWorldTransform());
+-            }
++            refreshSceneBounds();
+             // the stochastic renderer leaves its frame's depth behind, so no pick pass is needed
+             this.picker = this.splatRenderer
+                 ? new FrameDepthPicker(app, camera, this.splatRenderer)
+@@ -97661,7 +97703,7 @@ class Viewer {
+             // for development pages (the bench measures pick noise), as splatRenderer:ready
+             events.fire('picker:ready', this.picker);
+             this.inputController = new InputController(global, this.picker);
+-            this.cameraManager = new CameraManager(global, sceneBound);
++            this.cameraManager = new CameraManager(global, sceneBound, null, refreshSceneBounds);
+             applyCamera(this.cameraManager.camera);
+             if (config.ui) {
+                 this.navCursor = new NavCursor(app, camera, null, events, state, config.reticle);
+@@ -97795,9 +97837,9 @@ class Viewer {
+             throw new Error(`${method}: the viewer is not loaded`);
+         }
+     }
+-    frameScene() {
++    frameScene(options) {
+         this.requireLoaded('frameScene');
+-        this.global.events.fire('inputEvent', 'frame');
++        this.global.events.fire('inputEvent', 'frame', options);
+     }
+     resetCamera() {
+         this.requireLoaded('resetCamera');
+@@ -98446,7 +98488,7 @@ const createViewer = async (options) => {
+         annotations: global.settings.annotations,
+         captureFrame: (captureOptions) => viewer.captureFrame(captureOptions),
+         seek: (time) => viewer.seek(time),
+-        frameScene: () => viewer.frameScene(),
++        frameScene: (options) => viewer.frameScene(options),
+         resetCamera: () => viewer.resetCamera(),
+         toggleWalk: () => viewer.toggleWalk(),
+         selectAnnotation: (index) => viewer.selectAnnotation(index),

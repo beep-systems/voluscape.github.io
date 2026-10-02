@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>VoluScape | Drone footage to explorable 3D landscapes</title>
+  <meta name="description" content="Explore VoluScape's 3D landscapes reconstructed from drone footage with Gaussian splatting. Compare seven original videos with interactive scenes.">
+  <link rel="canonical" href="https://voluscape.beep.systems/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="VoluScape">
+  <meta property="og:title" content="VoluScape | Explorable 3D landscapes">
+  <meta property="og:description" content="From drone footage to interactive 3D landscapes. Explore seven reconstruction examples.">
+  <meta property="og:url" content="https://voluscape.beep.systems/">
+  <meta property="og:image" content="https://voluscape.beep.systems/assets/social-preview.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="675">
+  <meta property="og:image:alt" content="Drone view of a chapel surrounded by trees, a VoluScape reconstruction example">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="VoluScape | Explorable 3D landscapes">
+  <meta name="twitter:description" content="Compare drone videos with interactive 3D landscapes reconstructed using Gaussian splatting.">
+  <meta name="twitter:image" content="https://voluscape.beep.systems/assets/social-preview.jpg">
+  <meta name="twitter:image:alt" content="Drone view of a chapel surrounded by trees">
+  <meta name="theme-color" content="#101517">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="assets/gallery.css">
+  <script type="module" src="assets/gallery.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#workspace">Skip to preview</a>
+  <header class="page-header">
+    <div><p class="eyebrow">VOLUSCAPE</p>
+    <h1>Drone footage. Explorable 3D landscapes.</h1>
+    <p class="intro">Explore landscapes reconstructed with Gaussian splatting. Compare original drone videos with interactive 3D scenes.</p></div>
+  </header>
+  <main>
+    <p id="catalog-error" class="error" role="alert" hidden></p>
+    <div class="toolbar">
+      <label>Choose a scene<select id="test-select" disabled aria-label="Scene" aria-controls="workspace"></select></label>
+    </div>
+    <div id="workspace" class="workspace" tabindex="-1">
+      <section class="panel" aria-labelledby="video-heading">
+        <div class="panel-header"><h2 id="video-heading">Video</h2><span class="tag">720p</span></div>
+        <div id="video-host" class="media-host"></div>
+        <p id="video-error" class="error panel-note" role="alert" hidden></p>
+      </section>
+      <section class="panel" aria-labelledby="scene-heading">
+        <div class="panel-header"><h2 id="scene-heading">3D scene</h2><span id="scene-format" class="tag">Pending</span></div>
+        <div id="scene-host" class="media-host scene-host"><div class="placeholder"><span class="placeholder-icon" aria-hidden="true">◇</span><p>Loading catalog…</p></div></div>
+        <div class="scene-actions"><p id="scene-status" class="muted" role="status"></p><button id="open-scene" disabled>Open scene</button><button id="close-scene" class="secondary" hidden>Close scene</button></div>
+        <p id="scene-error" class="error panel-note" role="alert" hidden></p>
+      </section>
+    </div>
+    <section class="details" aria-labelledby="details-heading">
+      <h2 id="details-heading">Statistics</h2><p id="description" class="muted"></p>
+      <dl id="metadata"></dl>
+      <details id="parameters-section" hidden><summary>Run parameters</summary><pre id="parameters"></pre></details>
+    </section>
+    <section class="scene-directory" aria-labelledby="directory-heading">
+      <h2 id="directory-heading">Explore the scenes</h2>
+      <!-- catalog:start -->
+      <ul class="scene-list">
+        <li><h3><a href="#test=ch">Chapel</a></h3><p>A small chapel with a tiered red roof, surrounded by trees and paths.</p></li>
+        <li><h3><a href="#test=hs">Abandoned building</a></h3><p>A large rectangular building with a weathered roof and open central courtyard.</p></li>
+        <li><h3><a href="#test=qt">Residential neighborhood</a></h3><p>A residential neighborhood with detached houses, gardens and ongoing construction.</p></li>
+        <li><h3><a href="#test=rd">Roundabout</a></h3><p>An urban roundabout bordered by red-roofed buildings and railway tracks.</p></li>
+        <li><h3><a href="#test=sl">Grain silos</a></h3><p>A group of tall cylindrical grain silos with an adjoining elevator tower.</p></li>
+        <li><h3><a href="#test=tw">Water tower</a></h3><p>A cylindrical water tower beside railway tracks and nearby buildings.</p></li>
+        <li><h3><a href="#test=wh">Industrial buildings</a></h3><p>Low-rise industrial buildings with weathered roofs beside residential streets.</p></li>
+      </ul>
+      <!-- catalog:end -->
+    </section>
+  </main>
+  <footer>VoluScape · Experiment gallery</footer>
+  <noscript><p class="error">Enable JavaScript to select and view scenes.</p></noscript>
+</body>
+</html>

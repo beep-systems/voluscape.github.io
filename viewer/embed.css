@@ -1,0 +1,19 @@
+:root { color-scheme: dark; }
+html, body { height: 100%; margin: 0; overflow: hidden; background: #080d0a; }
+html[data-orienting] canvas { visibility: hidden; }
+.embed-error { color: #ffc6ba; font: 14px/1.6 system-ui; padding: 24px; overflow-wrap: anywhere; }
+#level-controls { position: absolute; top: max(8px, env(safe-area-inset-top)); left: max(8px, env(safe-area-inset-left)); z-index: 5; padding: 4px 8px; border-radius: 8px; background: #101517e8; color: #eaf0ed; font: 12px system-ui; max-width: calc(100% - 16px); display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; }
+#level-controls label { cursor: pointer; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; }
+#fit-scene { min-height: 44px; min-width: 44px; font: inherit; padding: 8px; color: #112219; background: #b9efc8; border: 0; border-radius: 5px; cursor: pointer; }
+#level-status { color: #a5b5ad; flex-basis: 100%; padding-bottom: 4px; }
+#level-controls[hidden] { display: none; }
+#level-controls.sse-faded-in { visibility: visible; opacity: 1; transition: opacity 0.5s ease-out; }
+#level-controls.sse-faded-out { visibility: hidden; opacity: 0; transition: visibility 0s 0.5s, opacity 0.5s ease-out; }
+#level-controls.sse-dimmed { opacity: 0.4; }
+:focus-visible { outline: 3px solid #b9efc8; outline-offset: 2px; }
+.sse-viewer button { min-width: 44px; min-height: 44px; }
+.sse-viewer canvas { touch-action: none; }
+.sse-viewer .sse-buttonsContainer { flex-wrap: wrap; }
+.sse-viewer .sse-ui .sse-spacer,
+.sse-viewer .sse-ui .sse-controlsWrap,
+.sse-viewer .sse-ui .sse-buttonsContainer { pointer-events: none; }
