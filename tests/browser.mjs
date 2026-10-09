@@ -4,7 +4,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { mkdir, readFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import { createServer } from '../scripts/serve.mjs';
-import { framePose } from '../viewer/framing.js';
+import { framePose } from '../viewer/vendor/framing.js';
 
 const require = createRequire(import.meta.url);
 const playwrightPath = process.env.PLAYWRIGHT_MODULE ?? require.resolve('playwright');
@@ -36,8 +36,8 @@ try {
     await page.selectOption('#test-select', id);
     const dimensions = await page.locator('video').evaluate((video) => new Promise((resolve, reject) => {
       const timeout = setTimeout(() => reject(new Error('Video decode timed out')), 20000);
-      video.addEventListener('loadeddata', () => { clearTimeout(timeout); resolve([video.videoWidth, video.videoHeight]); }, { once: true });
-      video.addEventListener('error', () => { clearTimeout(timeout); reject(new Error('Video decode failed')); }, { once: true });
+      video.addEventListener('loadeddata', async () => { clearTimeout(timeout); resolve([video.videoWidth, video.videoHeight]); }, { once: true });
+      video.addEventListener('error', async () => { clearTimeout(timeout); reject(new Error('Video decode failed')); }, { once: true });
       video.load();
     }));
     assert.equal(dimensions[0], 1280, id);
@@ -83,8 +83,8 @@ try {
   const frameURL = new URL(await page.locator('iframe').getAttribute('src'));
   assert.equal(frameURL.searchParams.get('lang'), 'en');
   assert.ok(frameURL.searchParams.get('content').endsWith('/preview/scenes/ch/raw.ply'));
-  assert.ok(frameURL.searchParams.get('settings').endsWith('/preview/viewer/settings.json'));
-  await page.evaluate(() => { location.hash = 'test=ch&variant=balanced'; });
+  assert.ok(frameURL.searchParams.get('settings').endsWith('/preview/viewer/vendor/settings.json'));
+  await page.evaluate(async () => { location.hash = 'test=ch&variant=balanced'; });
   await page.waitForFunction(() => document.getElementById('scene-heading').textContent.includes('Balanced'));
   assert.equal(await page.locator('iframe').count(), 0);
   await page.locator('#open-scene').click();
@@ -92,7 +92,7 @@ try {
   assert.equal(await page.locator('iframe').count(), 1);
   await page.locator('#close-scene').click();
   assert.equal(await page.locator('iframe').count(), 0);
-  await page.evaluate(() => { location.hash = 'test=ch&variant=missing'; });
+  await page.evaluate(async () => { location.hash = 'test=ch&variant=missing'; });
   await page.waitForFunction(() => document.getElementById('scene-heading').textContent.includes('Missing'));
   await page.locator('#open-scene').click();
   await page.locator('#scene-error').waitFor({ state: 'visible' });
@@ -102,9 +102,9 @@ try {
 
   await page.route('**/scenes/ch/balanced.sog', async (route) => {
     await new Promise((resolve) => setTimeout(resolve, 500));
-    await route.fulfill({ status: 200, body: '' }).catch(() => {});
+    await route.fulfill({ status: 200, body: '' }).catch(async () => {});
   });
-  await page.evaluate(() => { location.hash = 'test=ch&variant=balanced'; });
+  await page.evaluate(async () => { location.hash = 'test=ch&variant=balanced'; });
   await page.waitForFunction(() => document.getElementById('scene-heading').textContent.includes('Balanced'));
   await page.locator('#open-scene').click();
   await page.selectOption('#test-select', 'hs');
@@ -126,7 +126,7 @@ try {
   const ply = Buffer.concat([header, vertices]);
   await page.route('**/scenes/ch/raw.ply', (route) => route.fulfill({ status: 200, contentType: 'application/octet-stream', body: ply }));
   await page.selectOption('#test-select', 'ch');
-  await page.evaluate(() => { location.hash = 'test=ch&variant=raw'; });
+  await page.evaluate(async () => { location.hash = 'test=ch&variant=raw'; });
   await page.waitForFunction(() => document.getElementById('scene-heading').textContent.includes('Raw'));
   await page.locator('#open-scene').click();
   await page.locator('iframe').waitFor();
@@ -134,27 +134,28 @@ try {
   await page.locator('iframe').evaluate((frame) => { const url = new URL(frame.src); url.searchParams.set('webgl', ''); frame.src = url; });
   const actualViewer = await page.locator('iframe').elementHandle();
   const viewerFrame = await actualViewer.contentFrame();
-  await viewerFrame.waitForFunction(() => window.app && document.querySelector('.sse-loadingWrap')?.classList.contains('sse-hidden'), null, { timeout: 20000 }).catch(async (error) => {
+  await viewerFrame.evaluate(async () => { window.testController = (await import('./app.js')).controller; });
+  await viewerFrame.waitForFunction(() => document.getElementById('scene-host').dataset.status === 'ready', null, { timeout: 20000 }).catch(async (error) => {
     console.log('Viewer body:', await viewerFrame.locator('body').innerText());
     console.log('Viewer errors:', errors);
     throw error;
   });
   assert.ok(await viewerFrame.locator('canvas').evaluate((canvas) => canvas.width > 0 && canvas.height > 0));
-  await viewerFrame.waitForFunction(() => !document.documentElement.hasAttribute('data-orienting'));
-  const up = await viewerFrame.evaluate(() => {
-    const entity = window.app.root.findComponents('gsplat')[0].entity;
+  await viewerFrame.waitForFunction(() => document.getElementById('scene-host').dataset.status === 'ready');
+  const up = await viewerFrame.evaluate(async () => {
+    const entity = window.testController.viewer.app.root.findComponents('gsplat')[0].entity;
     return [entity.up.x, entity.up.y, entity.up.z];
   });
   assert.ok(Math.abs(up[0]) < 0.0001 && Math.abs(up[1]) < 0.0001 && Math.abs(up[2] - 1) < 0.0001);
-  assert.equal(await viewerFrame.locator('html').getAttribute('data-level-status'), 'skipped');
+  assert.equal(await viewerFrame.evaluate(async () => window.testController.transformation.autoLevel), false);
   assert.equal(await viewerFrame.locator('#auto-level').isDisabled(), true);
-  assert.equal(await viewerFrame.locator('#level-status').innerText(), 'No reliable estimate');
+  assert.equal(await viewerFrame.locator('#scene-status').innerText(), 'No reliable level estimate');
   await viewerFrame.locator('#fit-scene').waitFor({ state: 'visible' });
-  const framingState = () => viewerFrame.evaluate(() => {
-    const camera = window.app.root.findComponents('camera')[0];
+  const framingState = () => viewerFrame.evaluate(async () => {
+    const camera = window.testController.viewer.app.root.findComponents('camera')[0];
     const position = camera.entity.getPosition();
-    return { bounds: window.previewFraming.bounds, position: [position.x, position.y, position.z],
-      fov: camera.fov, width: window.app.graphicsDevice.width, height: window.app.graphicsDevice.height };
+    return { bounds: window.testController.transformation.bounds, position: [position.x, position.y, position.z],
+      fov: camera.fov, width: window.testController.viewer.app.graphicsDevice.width, height: window.testController.viewer.app.graphicsDevice.height };
   });
   const initialFrame = await framingState();
   assert.ok(initialFrame.bounds);
@@ -162,24 +163,34 @@ try {
   assert.ok(initialFrame.position.every((value, axis) => Math.abs(value - expectedInitial.position[axis]) < 1e-4));
   await viewerFrame.locator('#fit-scene').click();
   await viewerFrame.waitForFunction((expected) => {
-    const position = window.app.root.findComponents('camera')[0].entity.getPosition();
+    const position = window.testController.viewer.app.root.findComponents('camera')[0].entity.getPosition();
     return [position.x, position.y, position.z].every((value, axis) => Math.abs(value - expected[axis]) < 1e-4);
   }, initialFrame.position);
   const beforeResize = await framingState();
   await page.setViewportSize({ width: 700, height: 1000 });
   const resizeDimensions = await page.locator('iframe').evaluate(frame => [frame.clientWidth, frame.clientHeight]);
-  await viewerFrame.waitForFunction(([width, height]) => Math.abs(window.app.graphicsDevice.width - width * devicePixelRatio) < 2 && Math.abs(window.app.graphicsDevice.height - height * devicePixelRatio) < 2, resizeDimensions);
+  await viewerFrame.waitForFunction(([width, height]) => Math.abs(window.testController.viewer.app.graphicsDevice.width - width * devicePixelRatio) < 2 && Math.abs(window.testController.viewer.app.graphicsDevice.height - height * devicePixelRatio) < 2, resizeDimensions);
   const afterResize = await framingState();
   assert.deepEqual(afterResize.bounds, beforeResize.bounds);
   assert.ok(afterResize.position.every((value, axis) => Math.abs(value - beforeResize.position[axis]) < 1e-4));
   const expectedResize = framePose(afterResize.bounds, [2,2,-2], afterResize.fov, afterResize.width, afterResize.height);
   await viewerFrame.locator('#fit-scene').click();
   await viewerFrame.waitForFunction((expected) => {
-    const position = window.app.root.findComponents('camera')[0].entity.getPosition();
+    const position = window.testController.viewer.app.root.findComponents('camera')[0].entity.getPosition();
     return [position.x, position.y, position.z].every((value, axis) => Math.abs(value - expected[axis]) < 1e-4);
   }, expectedResize.position);
   assert.doesNotMatch(await viewerFrame.locator('body').innerText(), /[\u0400-\u04ff]/);
   await page.screenshot({ path: `${output}/synthetic-ply.png`, fullPage: true });
+  await viewerFrame.locator('#scene-file').setInputFiles({ name: 'replacement.ply', mimeType: 'application/octet-stream', buffer: ply });
+  await viewerFrame.locator('#scene-host[data-status="ready"]').waitFor();
+  await viewerFrame.waitForFunction(() => window.testController.state.filename === 'replacement.ply' && window.testController.state.status === 'ready');
+  assert.equal(await page.locator('iframe').count(), 1, 'local replacement must retain the embed');
+  await viewerFrame.locator('#close-scene').click();
+  await page.locator('iframe').waitFor({ state: 'detached' });
+  assert.equal(await page.locator('#open-scene').isVisible(), true);
+  await page.locator('#open-scene').click();
+  await page.locator('iframe').waitFor();
+  console.log('PASS: local-file replacement retains embed; internal close updates gallery; scene reopens');
   await page.selectOption('#test-select', 'hs');
   assert.equal(await page.locator('iframe').count(), 0);
   console.log('PASS: actual pinned WebGL viewer rendered a synthetic four-Gaussian PLY; iframe removed on switch');

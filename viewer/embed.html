@@ -1,15 +1,93 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta name="robots" content="noindex">
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>VoluScape scene viewer</title>
-  <link rel="stylesheet" href="index.css">
-  <link rel="stylesheet" href="embed.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <title data-i18n="app.title"></title>
+  <link rel="stylesheet" href="vendor/index.css">
+  <link rel="stylesheet" href="app.css">
 </head>
 <body>
-  <div id="level-controls" hidden><button id="fit-scene" type="button" title="Center and fit the main scene in the current viewport">Fit scene</button> <label title="Estimate a dominant surface as horizontal. Disable for naturally sloped terrain."><input id="auto-level" type="checkbox" checked>Auto level</label><span id="level-status" role="status"></span></div>
+  <main id="scene-host" data-i18n-aria-label="scene.label"></main>
+  <div id="empty-state"><span data-i18n="scene.empty"></span><br><small data-i18n="scene.privacy"></small></div>
+  <div id="scene-tools">
+  <section id="file-controls" class="icon-toolbar" data-i18n-aria-label="scene.files">
+    <button id="open-scene" type="button" data-i18n-aria-label="scene.open" data-i18n-title="scene.open"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V5h6l2 2h10v4M3 7v13h16l3-9H7l-4 9"/></svg></button>
+    <input id="scene-file" type="file" accept=".ply,.sog" hidden>
+    <button id="close-scene" type="button" data-i18n-aria-label="scene.close" data-i18n-title="scene.closeHint" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+  </section>
+  <section id="orientation-controls" class="icon-toolbar" data-i18n-aria-label="scene.orientation" hidden>
+    <label class="icon-toggle" data-i18n-title="scene.landingRotation"><input id="display-rotation" type="checkbox" data-i18n-aria-label="scene.landingRotation" checked><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10a8 8 0 1 1 2 9M4 4v6h6M9 15l3-6 3 6z"/></svg></label>
+    <label class="icon-toggle" data-i18n-title="scene.autoLevelInitialHint"><input id="auto-level" type="checkbox" data-i18n-aria-label="scene.autoLevel" checked><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="8" width="18" height="8" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 11v2m12-2v2"/></svg></label>
+  </section>
+  <section id="fit-controls" class="icon-toolbar" data-i18n-aria-label="scene.framing" hidden>
+    <button id="fit-scene" type="button" data-i18n-aria-label="scene.fit" data-i18n-title="scene.fit" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3H3v6m12-6h6v6M3 15v6h6m6 0h6v-6"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg></button>
+  </section>
+  </div>
+  <div id="scene-controls">
+  <section id="toolbar" class="icon-toolbar" data-i18n-aria-label="marker.controls" hidden>
+    <div id="interaction-modes" role="group" data-i18n-aria-label="marker.interaction">
+      <button id="edit-mode" type="button" data-i18n-aria-label="marker.edit" data-i18n-title="marker.editHint" aria-pressed="true" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5 5 5M4 20l1-5L17 3l4 4L9 19z"/></svg></button>
+      <button id="route-mode" type="button" data-i18n-aria-label="marker.addRoute" data-i18n-title="marker.addRoute" aria-pressed="false" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="18" r="2"/><circle cx="11" cy="6" r="2"/><path d="m6 16 4-8m2 0 4 9M18 3v6m-3-3h6"/><circle cx="17" cy="19" r="2"/></svg></button>
+      <button id="reference-mode" type="button" data-i18n-aria-label="marker.addReference" data-i18n-title="marker.addReferenceHint" aria-pressed="false" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 10a6 6 0 1 0-12 0c0 4 6 11 6 11s2-2 3-4M17 5v8m-4-4h8"/><circle cx="8" cy="10" r="2"/></svg></button>
+    </div>
+    <div id="route-tools" role="group" data-i18n-aria-label="marker.routeTools">
+      <button id="set-scale" type="button" data-i18n-aria-label="scale.set" data-i18n-title="scale.set" aria-pressed="false" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h18v10H3zM7 7v5m5-5v3m5-3v5"/></svg></button>
+      <button id="delete-route" type="button" data-i18n-aria-label="route.delete" data-i18n-title="route.delete" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/></svg></button>
+    </div>
+    <span id="marker-count" class="sr-only"></span>
+    <span id="edit-hint" class="sr-only" hidden data-i18n="marker.dragHint"></span>
+    <span id="file-name" class="sr-only"></span>
+    <span id="scene-status" class="sr-only" role="status" aria-live="polite" data-i18n="scene.notLoaded"></span>
+  </section>
+  <section id="measurement-summary" hidden>
+    <span id="route-length" role="status" data-i18n="scale.notSet"></span>
+  </section>
+  <section id="scale-editor" data-i18n-aria-label="scale.editor" hidden>
+    <p id="scale-hint" role="status"></p>
+    <form id="scale-form">
+      <div id="scale-fields" hidden>
+        <label for="scale-distance" data-i18n="scale.distance"></label>
+        <input id="scale-distance" type="text" inputmode="decimal" autocomplete="off" required>
+      </div>
+      <p id="scale-error" role="alert" hidden></p>
+      <div id="scale-actions">
+        <button id="apply-scale" type="submit" hidden data-i18n="action.apply"></button>
+        <button id="cancel-scale" type="button" data-i18n="action.cancel"></button>
+      </div>
+    </form>
+  </section>
+  <span id="scene-error" role="alert" hidden></span>
+  <section id="marker-editor" data-i18n-aria-label="marker.editor" hidden>
+    <div id="marker-editor-header">
+      <strong id="marker-editor-title"></strong>
+      <button id="close-marker-editor" type="button" data-i18n-aria-label="marker.closeEditor" data-i18n-title="marker.closeEditor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div id="marker-name-wrap"><label for="marker-name" data-i18n="marker.name"></label><input id="marker-name" type="text"></div>
+    <div id="marker-type-label" class="editor-label" data-i18n="marker.type"></div>
+    <div id="marker-type" class="icon-toolbar" role="group" aria-labelledby="marker-type-label">
+      <button id="marker-type-route" type="button" data-type="route" data-i18n-aria-label="marker.route" data-i18n-title="marker.route" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="18" r="2"/><circle cx="11" cy="6" r="2"/><path d="m6 16 4-8m2 0 4 9"/><circle cx="17" cy="19" r="2"/></svg></button>
+      <button id="marker-type-reference" type="button" data-type="reference" data-i18n-aria-label="marker.reference" data-i18n-title="marker.reference" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 10a6 6 0 1 0-12 0c0 4 6 11 6 11s2-2 3-4"/><circle cx="8" cy="10" r="2"/></svg></button>
+    </div>
+    <div id="marker-palette" role="group" data-i18n-aria-label="marker.color"></div>
+    <label for="marker-note" data-i18n="marker.note"></label>
+    <textarea id="marker-note" rows="4" data-i18n-placeholder="marker.notePlaceholder"></textarea>
+    <div id="marker-actions">
+      <button id="save-marker" type="button" data-i18n="action.save"></button>
+      <span id="marker-save-status" role="status" aria-live="polite"></span>
+      <button id="delete-marker" type="button" data-i18n-aria-label="marker.delete" data-i18n-title="marker.delete" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/></svg></button>
+    </div>
+  </section>
+  </div>
+  <dialog id="delete-route-dialog" aria-labelledby="delete-route-title" aria-describedby="delete-route-message">
+    <strong id="delete-route-title" data-i18n="route.delete"></strong>
+    <p id="delete-route-message"></p>
+    <div id="delete-route-actions">
+      <button id="confirm-delete-route" type="button" data-i18n="action.delete"></button>
+      <button id="cancel-delete-route" type="button" autofocus data-i18n="action.cancel"></button>
+    </div>
+  </dialog>
   <script type="module" src="embed.js"></script>
 </body>
 </html>

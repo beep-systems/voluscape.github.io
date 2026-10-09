@@ -11,7 +11,7 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const catalog = JSON.parse(await readFile(new URL('../catalog.json', import.meta.url)));
 test('static scene directory stays synchronized, escaped, and indexable', async () => {
   const html = await readFile(resolve(root, 'index.html'), 'utf8');
-  assert.equal(html, withDirectory(html, catalog), 'run npm run content after editing catalog');
+  assert.equal(html.replaceAll('\r\n', '\n'), withDirectory(html, catalog).replaceAll('\r\n', '\n'), 'run npm run content after editing catalog');
   assert.equal((html.match(/<h1[ >]/g) ?? []).length, 1);
   for (const scene of catalog) { assert.ok(html.includes(escapeHTML(scene.title))); assert.ok(html.includes(escapeHTML(scene.description))); }
   assert.match(withDirectory('<!-- catalog:start --><!-- catalog:end -->', [{ id: 'safe', title: '<script>', description: '&"' }]), /&lt;script&gt;/);

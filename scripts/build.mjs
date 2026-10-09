@@ -23,8 +23,12 @@ export async function build(destination = resolve(root, 'dist')) {
     || !['dist', 'build'].includes(outputRelative.split(/[\\/]/)[0])) throw new Error('Output must be inside project dist/ or build/.');
   const files = new Set(['index.html', 'catalog.json', 'robots.txt', 'sitemap.xml',
     'assets/gallery.css', 'assets/gallery.js', 'assets/catalog.js', 'assets/favicon.svg', 'assets/social-preview.jpg',
-    'viewer/embed.html', 'viewer/embed.js', 'viewer/embed.css', 'viewer/index.css', 'viewer/index.js',
-    'viewer/settings.json', 'viewer/framing.js', 'viewer/level.js', 'viewer/LICENSE', 'viewer/PLAYCANVAS-LICENSE']);
+    'viewer/embed.html', 'viewer/embed.js', 'viewer/index.html', 'viewer/app.css', 'viewer/app.js',
+    'viewer/controller.js', 'viewer/orientation.js', 'viewer/level.js', 'viewer/markers.js',
+    'viewer/measurements.js', 'viewer/marker-labels.js', 'viewer/distance-labels.js',
+    'viewer/camera-drag-cursor.js', 'viewer/top-controls.js', 'viewer/i18n.js', 'viewer/locales/en.js',
+    'viewer/vendor/index.css', 'viewer/vendor/index.js', 'viewer/vendor/settings.json',
+    'viewer/vendor/framing.js', 'viewer/vendor/LICENSE', 'viewer/vendor/PLAYCANVAS-LICENSE']);
   for (const scene of catalog) {
     files.add(scene.video);
     if (scene.poster) files.add(scene.poster);
@@ -42,7 +46,7 @@ export async function build(destination = resolve(root, 'dist')) {
     const target = resolve(destination, file);
     await mkdir(resolve(target, '..'), { recursive: true });
     if (file === 'index.html') await writeFile(target, html);
-    else if (file === 'viewer/index.js') await writeFile(target, (await readFile(resolve(root, file), 'utf8')).replace(/^\/\/# sourceMappingURL=.*\r?\n?/gm, ''));
+    else if (file === 'viewer/vendor/index.js') await writeFile(target, (await readFile(resolve(root, file), 'utf8')).replace(/^\/\/# sourceMappingURL=.*\r?\n?/gm, ''));
     else await cp(resolve(root, file), target);
   }
   await writeFile(resolve(destination, '.nojekyll'), '');

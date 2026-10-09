@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { framingBounds, framePose } from '../viewer/framing.js';
+import { framingBounds, framePose } from '../viewer/vendor/framing.js';
 import { sampleWorldCenters } from '../viewer/level.js';
 
 test('framing uses transformed world centers and trims distant outliers', () => {

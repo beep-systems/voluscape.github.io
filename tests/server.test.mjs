@@ -9,7 +9,7 @@ for (const prefix of ['', '/preview']) {
     await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
     context.after(() => { server.closeAllConnections(); server.close(); });
     const base = `http://127.0.0.1:${server.address().port}${prefix}`;
-    for (const path of ['/', '/assets/gallery.js', '/viewer/index.html', '/viewer/embed.html', '/viewer/embed.js', '/viewer/index.js', '/viewer/settings.json']) {
+    for (const path of ['/', '/assets/gallery.js', '/viewer/index.html', '/viewer/embed.html', '/viewer/embed.js', '/viewer/vendor/index.js', '/viewer/vendor/settings.json']) {
       assert.equal((await fetch(base + path, { method: 'HEAD' })).status, 200, path);
     }
     for (const id of ['ch', 'hs', 'qt', 'rd', 'sl', 'tw', 'wh']) {

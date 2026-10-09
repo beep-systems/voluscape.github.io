@@ -14,7 +14,9 @@ npm run serve
 Open http://127.0.0.1:4173/. To check a repository subpath, run `npm run serve -- --prefix /preview` and open http://127.0.0.1:4173/preview/.
 If the default port is occupied, add `--port 4174` to the preview command.
 
-Scenes load only after **Open scene**. Drag to orbit and scroll/pinch to zoom. On touch devices, two fingers pan; scroll outside the viewer to move through the page. Close the scene to release its rendering resources.
+Scenes load only after **Open scene**. Drag to orbit and scroll/pinch to zoom. On touch devices, two fingers pan; scroll outside the viewer to move through the page. Close the scene to release its rendering resources. The embedded viewer includes route and reference markers, scale calibration, measurements, orientation controls and local PLY/SOG loading. Markers and measurements last for the current scene session.
+
+The full viewer is copied from the VoluScape viewer project. Its pinned distribution is SuperSplat 1.37.0 with PlayCanvas 2.23.0; provenance and licenses are retained in `viewer/vendor/`. See [vendor update instructions](viewer/UPDATING.md). `viewer/index.html` opens the standalone local-file interface. The gallery uses `viewer/embed.html?content=…&settings=…&lang=en`; scenes load directly from same-origin URLs. The localization framework currently ships an English dictionary.
 
 ## Content and build
 
@@ -32,15 +34,22 @@ The build replaces the generated `dist/` with only public assets and required th
 Install optional tooling locally; it is not part of the published site:
 
 ```sh
-npm install --no-save --package-lock=false playwright
+npm install --no-save --package-lock=false playwright sharp
 npx playwright install chromium
 npm run build
 npm run test:browser
 npm run test:scenes
 npm run test:mobile
+npm run test:viewer
+npm run test:markers
+npm run test:controls
+npm run test:fullscreen-labels
+npm run test:measurements
+npm run test:route-clear
+npm run test:i18n
 ```
 
-`PLAYWRIGHT_MODULE` and `PREVIEW_BROWSER` can point to an existing Playwright module and Chromium executable. `PREVIEW_TEST_OUTPUT` selects the screenshot/report directory (default: ignored `build/`). Browser checks cover real MP4 decode, real SOG rendering, synthetic viewer fixtures, touch emulation and responsive layouts. Emulation is not verification on a physical phone; check iOS Safari and Android Chrome before publishing.
+`PLAYWRIGHT_MODULE` and `PREVIEW_BROWSER` can point to an existing Playwright module and Chromium executable. `SHARP_MODULE` can point to an existing Sharp module for synthetic SOG fixtures. `PREVIEW_TEST_OUTPUT` selects the screenshot/report directory (default: ignored `build/`). Browser checks cover real MP4 decode, real SOG rendering, synthetic viewer fixtures, touch emulation and responsive layouts. Emulation is not verification on a physical phone; check iOS Safari and Android Chrome before publishing.
 
 ## GitHub Pages publication
 

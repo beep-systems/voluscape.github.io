@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 2,
+  "package": "@playcanvas/supersplat-viewer",
+  "version": "1.37.0",
+  "engineVersion": "2.23.0",
+  "upstream": {
+    "url": "https://github.com/playcanvas/supersplat-viewer.git",
+    "tag": "v1.37.0",
+    "commit": "cd0e316e397929ffa87abd4833f73f8a0bd1fd2b"
+  },
+  "fork": {
+    "url": "https://github.com/beep-systems/supersplat-viewer.git",
+    "commit": "ffecd446bae2229af49afddfeb7c80af32f7bfa3"
+  },
+  "build": {
+    "node": "24.14.1",
+    "npm": "11.11.0",
+    "lockfileSha256": "0dc72691c4ad9e9c49cd3e865a3b2333d73582f4a503f057f7b23f46f7f73e05",
+    "commands": [
+      "npm ci",
+      "npm run build"
+    ],
+    "textNormalization": "LF"
+  },
+  "files": {
+    "index.js": "0010a7041cdabd9149c47067715d9b69ae5cf4b82155258af9b1994746884927",
+    "index.css": "92e50eab13d86bb6bd32ee62e0b60a42d25cd2047e49cc67d53d49e20d71c1da",
+    "settings.json": "c9fbe33244e80311db4ea75ee6d28b5f86448ca2f54dad66bc76671e3dd84c14",
+    "LICENSE": "44716a2a1040df078772702d677d46f7d97f40c2375bf8221d4b3b741143f823",
+    "PLAYCANVAS-LICENSE": "42fa51ddd556be151a29f381fb97ee975825dcc454e805ea3ea9c079cca04d34",
+    "THIRD-PARTY.md": "50b84cd974ab543f3930ac9de2e911cf978416bd5ccc46a8afd7bad12a323754",
+    "framing.js": "2f957f07bcdc4453d9dcb57bfac0a8ddfb98198e4762512559185539743c2b8a"
+  }
+}

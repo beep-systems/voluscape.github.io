@@ -6,7 +6,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import assert from 'node:assert/strict';
 import { createServer } from '../scripts/serve.mjs';
-import { framePose } from '../viewer/framing.js';
+import { framePose } from '../viewer/vendor/framing.js';
 
 const require = createRequire(import.meta.url);
 const { chromium } = (await import(pathToFileURL(process.env.PLAYWRIGHT_MODULE ?? require.resolve('playwright')))).default;
@@ -19,7 +19,7 @@ const base = `http://127.0.0.1:${server.address().port}/preview/`;
 const catalog = JSON.parse(await readFile(new URL('../catalog.json', import.meta.url)));
 const scenes = catalog.map(scene => [scene.id, scene.results[0].scene]);
 if (process.env.PREVIEW_PLY) scenes.push(['ply', process.env.PREVIEW_PLY.replaceAll('\\', '/')]);
-const settings = JSON.parse(await readFile(new URL('../viewer/settings.json', import.meta.url)));
+const settings = JSON.parse(await readFile(new URL('../viewer/vendor/settings.json', import.meta.url)));
 const initial = settings.cameras[0].initial;
 const direction = initial.position.map((value, axis) => value - initial.target[axis]);
 const sha = async path => createHash('sha256').update(await readFile(`${root}/${path}`)).digest('hex');
@@ -35,13 +35,14 @@ try {
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
     await page.goto(`${base}viewer/embed.html?content=${encodeURIComponent(base + path)}`);
-    await page.waitForFunction(() => window.app && !document.documentElement.hasAttribute('data-orienting'), null, { timeout: 60000 });
-    const snapshot = () => page.evaluate(() => {
-      const camera = window.app.root.findComponents('camera')[0];
+    await page.evaluate(async () => { window.testController = (await import('./app.js')).controller; });
+    await page.locator('#scene-host[data-status="ready"]').waitFor({ timeout: 60000 });
+    const snapshot = () => page.evaluate(async () => {
+      const camera = window.testController.viewer.app.root.findComponents('camera')[0];
       const p = camera.entity.getPosition();
       const forward = camera.entity.forward;
       const depths = [];
-      for (const component of window.app.root.findComponents('gsplat')) {
+      for (const component of window.testController.viewer.app.root.findComponents('gsplat')) {
         const bound = component.customAabb;
         const m = component.entity.getWorldTransform().data;
         const lo = bound.getMin(), hi = bound.getMax();
@@ -51,14 +52,14 @@ try {
             (m[2]*x+m[6]*y+m[10]*z+m[14]-p.z)*forward.z);
         }
       }
-      return { position: [p.x,p.y,p.z], bounds: window.previewFraming.bounds,
+      return { position: [p.x,p.y,p.z], bounds: window.testController.transformation.bounds,
         fullDepth: { min: Math.min(...depths), max: Math.max(...depths) },
-        fov: camera.fov, width: window.app.graphicsDevice.width, height: window.app.graphicsDevice.height,
-        near: camera.nearClip, far: camera.farClip, renderer: window.app.graphicsDevice.deviceType,
-        transforms: window.app.root.findComponents('gsplat').map(c => Array.from(c.entity.getWorldTransform().data)) };
+        fov: camera.fov, width: window.testController.viewer.app.graphicsDevice.width, height: window.testController.viewer.app.graphicsDevice.height,
+        near: camera.nearClip, far: camera.farClip, renderer: window.testController.viewer.app.graphicsDevice.deviceType,
+        transforms: window.testController.viewer.app.root.findComponents('gsplat').map(c => Array.from(c.entity.getWorldTransform().data)) };
     });
     const waitPose = position => page.waitForFunction(expected => {
-      const p = window.app.root.findComponents('camera')[0].entity.getPosition();
+      const p = window.testController.viewer.app.root.findComponents('camera')[0].entity.getPosition();
       return [p.x,p.y,p.z].every((value, axis) => Math.abs(value - expected[axis]) < 1e-4 * Math.max(1, Math.abs(expected[axis])));
     }, position);
     const opened = await snapshot();
@@ -75,7 +76,7 @@ try {
       await page.mouse.move(850,550,{ steps: 12 });
       await page.mouse.up();
       await page.waitForFunction(previous => {
-        const p = window.app.root.findComponents('camera')[0].entity.getPosition();
+        const p = window.testController.viewer.app.root.findComponents('camera')[0].entity.getPosition();
         return Math.hypot(p.x-previous[0],p.y-previous[1],p.z-previous[2]) > .01;
       }, before.position);
     };
@@ -93,7 +94,7 @@ try {
     if (await level.isEnabled()) {
       for (let i=0; i<2; i++) {
         await level.uncheck();
-        await page.waitForFunction(() => document.documentElement.dataset.levelStatus === 'skipped');
+        await page.waitForFunction(() => !window.testController.transformation.autoLevel);
         await level.check();
         await waitPose(expected.position);
         assert.deepEqual((await snapshot()).transforms, opened.transforms);
@@ -101,7 +102,7 @@ try {
       }
     }
     await page.setViewportSize({ width: 800, height: 1100 });
-    await page.waitForFunction(() => window.app.graphicsDevice.width < window.app.graphicsDevice.height);
+    await page.waitForFunction(() => window.testController.viewer.app.graphicsDevice.width < window.testController.viewer.app.graphicsDevice.height);
     const resized = await snapshot();
     assert.ok(close(resized.position, expected.position), 'resize preserves navigation');
     const portrait = framePose(resized.bounds, direction, resized.fov, resized.width, resized.height);

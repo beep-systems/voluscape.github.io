@@ -1,0 +1,110 @@
+:root { color-scheme: dark; font: 14px/1.5 system-ui, sans-serif; background: #080d0a; color: #eaf0ed; }
+html, body { height: 100%; margin: 0; overflow: hidden; }
+#scene-host { position: absolute; inset: 0; }
+#scene-host[data-loading] canvas { visibility: hidden; }
+#empty-state { position: absolute; inset: 45% 16px auto; text-align: center; pointer-events: none; }
+#empty-state[hidden], [hidden] { display: none !important; }
+#scene-controls { position: absolute; top: var(--controls-top, max(16px, env(safe-area-inset-top))); right: max(16px, env(safe-area-inset-right)); z-index: 6; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; width: min(320px, calc(100% - 32px)); max-height: calc(100dvh - var(--controls-top, max(16px, env(safe-area-inset-top))) - max(16px, env(safe-area-inset-bottom))); pointer-events: none; }
+#scene-tools { position: absolute; top: max(16px, env(safe-area-inset-top)); left: max(16px, env(safe-area-inset-left)); z-index: 6; display: flex; gap: 8px; pointer-events: none; }
+.icon-toolbar { display: flex; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0; max-width: 100%; border-radius: 6px; background: #0000004d; pointer-events: auto; }
+@media (max-width: 480px) { #scene-controls { --controls-top: calc(max(16px, env(safe-area-inset-top)) + 52px); } }
+.sr-only, .sse-viewer .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+button, .sse-viewer :where(#scene-tools, #scene-controls, #delete-route-dialog) button { min-width: 44px; min-height: 44px; padding: 8px 12px; font: inherit; border: 0; border-radius: 5px; background: #b9efc8; color: #112219; cursor: pointer; }
+/* Preserve host typography and native form scrolling inside the vendor root. */
+#scene-tools, #scene-controls, #delete-route-dialog { font: 14px/1.5 system-ui, sans-serif; }
+:is(#scene-tools, #scene-controls, #delete-route-dialog), :is(#scene-tools, #scene-controls, #delete-route-dialog) * { touch-action: auto; }
+#scene-controls input, #scene-controls textarea { user-select: text; }
+button:disabled { opacity: .45; cursor: default; }
+#interaction-modes { display: contents; }
+#route-tools { display: flex; }
+#route-tools button { border-radius: 0; }
+#route-tools button:first-child { border-radius: 4px 0 0 4px; }
+#route-tools button:last-child { border-radius: 0 4px 4px 0; }
+#delete-route-dialog { box-sizing: border-box; margin: auto; width: min(360px, calc(100% - 32px)); padding: 16px; border: 1px solid #4a5f52; border-radius: 8px; background: #101517; color: #eaf0ed; }
+#delete-route-message { margin: 1em 0; }
+#delete-route-dialog::backdrop { background: #0009; }
+#delete-route-actions { display: flex; align-items: center; gap: 8px; }
+#cancel-delete-route { margin-left: auto; }
+#confirm-delete-route { background: #ffc6ba; }
+.icon-toolbar button, .icon-toolbar .icon-toggle { position: relative; box-sizing: border-box; display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px; min-height: 44px; margin: 0; padding: 0; border: 0; border-radius: 4px; background: transparent; color: #e0dcdd; cursor: pointer; }
+.icon-toolbar svg, #delete-marker svg, #close-marker-editor svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+#file-controls, #orientation-controls { overflow: hidden; }
+#file-controls button, #orientation-controls .icon-toggle { border-radius: 0; }
+.icon-toolbar button:hover:not(:disabled):not([aria-pressed="true"]), .icon-toolbar label:hover { background: #ffffff1a; }
+.icon-toolbar button[aria-pressed="true"], .icon-toolbar .icon-toggle:has(input:checked) { background: #ff6600; color: #fff; }
+.icon-toolbar .icon-toggle:has(input:disabled) { opacity: .45; cursor: default; }
+.icon-toolbar .icon-toggle input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: inherit; }
+.icon-toolbar label:has(:focus-visible) { outline: 3px solid #b9efc8; outline-offset: 2px; }
+#file-controls button:focus-visible, #orientation-controls .icon-toggle:has(:focus-visible) { outline-offset: -3px; }
+/* Match the upstream segmented buttons: only the group's outer corners round. */
+#scene-tools .icon-toolbar, #toolbar { overflow: hidden; flex-wrap: nowrap; }
+#scene-tools .icon-toolbar button, #orientation-controls .icon-toggle, #interaction-modes button { border-radius: 0; }
+#scene-tools .icon-toolbar button:first-of-type, #orientation-controls .icon-toggle:first-child, #interaction-modes button:first-child { border-radius: 4px 0 0 4px; }
+#scene-tools .icon-toolbar button:last-of-type, #orientation-controls .icon-toggle:last-child, #interaction-modes button:last-child { border-radius: 0 4px 4px 0; }
+#fit-controls button:only-of-type { border-radius: 4px; }
+#interaction-modes button, #orientation-controls .icon-toggle {
+  background-image: linear-gradient(90deg, transparent 0%, transparent 50%, #ff6600 50%, #ff6600 100%);
+  background-size: 200% 100%; background-position: 100% 0%; background-repeat: no-repeat;
+  transition: background-position .1s ease-in-out;
+}
+#interaction-modes button:not([aria-pressed="true"]), #orientation-controls .icon-toggle:not(:has(input:checked)) { background-position: 0% 0%; }
+#interaction-modes button:last-child:not([aria-pressed="true"]), #orientation-controls .icon-toggle:last-child:not(:has(input:checked)) { background-position: 200% 0%; }
+/* The middle segment enters/exits toward its active neighbour. */
+#interaction-modes:has(#edit-mode[aria-pressed="true"]) #route-mode:not([aria-pressed="true"]) { background-position: 200% 0%; }
+#interaction-modes button[aria-pressed="true"], #orientation-controls .icon-toggle:has(input:checked) { background-color: transparent; color: #fff; }
+#interaction-modes button:hover:not(:disabled):not([aria-pressed="true"]), #orientation-controls .icon-toggle:hover { background-color: #ffffff1a; }
+#toolbar button:focus-visible { outline-offset: -3px; }
+#scene-tools, #toolbar, #measurement-summary { visibility: visible; opacity: 1; transition: opacity .5s ease-out; }
+#scene-tools.top-dimmed, #toolbar.top-dimmed, #measurement-summary.top-dimmed { opacity: .4; }
+#scene-tools.top-faded-out, #toolbar.top-faded-out, #measurement-summary.top-faded-out { visibility: hidden; opacity: 0; transition: visibility 0s .5s, opacity .5s ease-out; }
+#scene-tools.top-faded-out, #scene-tools.top-faded-out *, #toolbar.top-faded-out, #toolbar.top-faded-out *, #measurement-summary.top-faded-out, #measurement-summary.top-faded-out * { pointer-events: none; }
+@media (prefers-reduced-motion: reduce) {
+  #interaction-modes button, #orientation-controls .icon-toggle,
+  #scene-tools, #toolbar, #measurement-summary, #scene-tools.top-faded-out, #toolbar.top-faded-out, #measurement-summary.top-faded-out { transition: none; }
+}
+#marker-count { color: #a5b5ad; }
+label { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; cursor: pointer; }
+#file-name, #scene-status, #scene-error { overflow-wrap: anywhere; max-width: 100%; }
+#scene-status { color: #a5b5ad; }
+#scene-error { flex-shrink: 0; box-sizing: border-box; width: 100%; padding: 8px 12px; border-radius: 6px; background: #101517f5; color: #ffc6ba; pointer-events: auto; }
+#marker-editor { box-sizing: border-box; width: min(320px, 100%); min-height: 0; overflow: auto; padding: 12px; border-radius: 8px; background: #101517f5; pointer-events: auto; }
+#marker-editor label, #marker-editor .editor-label { display: block; min-height: 0; margin: 8px 0 4px; }
+#marker-type { width: fit-content; justify-content: flex-start; }
+#marker-editor-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+#close-marker-editor { display: grid; place-items: center; padding: 0; background: transparent; color: #e0dcdd; }
+#close-marker-editor:hover { background: #ffffff1a; }
+#marker-palette { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+#marker-palette button { position: relative; min-width: 44px; width: 44px; height: 44px; padding: 6px; background: transparent; border: 2px solid transparent; border-radius: 50%; }
+#marker-palette button::before { content: ''; display: block; width: 28px; height: 28px; border-radius: 50%; background: var(--swatch); }
+#marker-palette button[aria-pressed="true"] { border-color: #ffffff; }
+#marker-note { box-sizing: border-box; width: 100%; resize: vertical; min-height: 80px; padding: 6px; background: #202a24; color: #eaf0ed; border: 1px solid #4a5f52; border-radius: 4px; font: inherit; }
+#marker-actions { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+#save-marker { box-sizing: border-box; flex: 0 0 120px; width: 120px; }
+#delete-marker { display: grid; place-items: center; margin-left: auto; padding: 0; background: transparent; color: #e0dcdd; }
+#delete-marker:hover:not(:disabled) { background: #ffffff1a; }
+#marker-name { box-sizing: border-box; width: 100%; min-height: 44px; padding: 6px; background: #202a24; color: #eaf0ed; border: 1px solid #4a5f52; border-radius: 4px; font: inherit; }
+.marker-labels, .distance-labels { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+.marker-label, .sse-viewer .marker-label { position: absolute; transform: translate(-50%, calc(-100% - 10px)); padding: 3px 7px; max-width: 220px; overflow-wrap: anywhere; border-radius: 4px; color: #fff; background: #101517e8; font: 13px/1.4 system-ui, sans-serif; pointer-events: none; }
+.marker-labels[data-mode="edit-markers"] .marker-label { pointer-events: auto; cursor: pointer; touch-action: none; user-select: none; }
+html[data-marker-dragging], html[data-marker-dragging] *,
+html[data-camera-dragging], html[data-camera-dragging] * { cursor: none !important; }
+#marker-save-status { color: #a5b5ad; }
+body[data-dragging] #scene-host { outline: 4px dashed #b9efc8; outline-offset: -8px; }
+:focus-visible { outline: 3px solid #b9efc8; outline-offset: 2px; }
+#measurement-summary, #scale-editor { box-sizing: border-box; max-width: 100%; padding: 8px 12px; border-radius: 6px; background: #101517f5; pointer-events: auto; }
+#measurement-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+#scale-editor { width: min(320px, 100%); overflow: auto; flex-shrink: 0; }
+#scale-editor p { margin: 0 0 8px; }
+#scale-form { margin: 0; }
+#scale-fields { display: grid; gap: 8px; margin-bottom: 12px; }
+#scale-actions { display: flex; align-items: center; gap: 8px; }
+#cancel-scale { margin-left: auto; }
+#scale-form label { min-height: 0; }
+#scale-distance { box-sizing: border-box; width: 100%; min-height: 44px; padding: 6px; border: 1px solid #4a5f52; border-radius: 4px; background: #202a24; color: #eaf0ed; font: inherit; }
+#scale-error { color: #ffc6ba; }
+.distance-labels .marker-label { pointer-events: none !important; white-space: nowrap; color: #fff3b0; }
+.sse-viewer button { min-width: 44px; min-height: 44px; }
+.sse-viewer canvas { touch-action: none; }
+.sse-viewer .sse-ui .sse-spacer,
+.sse-viewer .sse-ui .sse-controlsWrap,
+.sse-viewer .sse-ui .sse-buttonsContainer { pointer-events: none; }

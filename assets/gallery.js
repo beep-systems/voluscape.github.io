@@ -119,7 +119,7 @@ async function openScene() {
   $('close-scene').hidden = false;
   $('scene-status').textContent = 'Checking files…';
   const sceneURL = mediaURL(result.scene, base);
-  const settingsURL = mediaURL(result.settings ?? 'viewer/settings.json', base);
+  const settingsURL = mediaURL(result.settings ?? 'viewer/vendor/settings.json', base);
   try {
     await Promise.all([checkFile(sceneURL, signal), checkFile(settingsURL, signal), checkFile(new URL('viewer/embed.html', base), signal)]);
     if (generation !== currentGeneration) return;
@@ -173,6 +173,8 @@ window.addEventListener('message', event => {
     $('scene-status').textContent = event.data.inputMode === 'touch' || matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0
       ? 'Drag to rotate. Pinch to zoom; use two fingers to pan. Scroll outside the scene to move down the page.'
       : 'Drag to rotate; scroll to zoom. In Fly mode: W / S forward / backward, A / D left / right, Q / E down / up.';
+  } else if (event.data.state === 'empty') {
+    select(selectedTest, selectedResult);
   } else if (event.data.state === 'error') {
     clearTimeout(viewerTimeout);
     showError('scene-error', 'Unable to render the scene. Close it and retry in a browser with WebGL support. You can still watch the video.');

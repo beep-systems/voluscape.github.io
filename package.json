@@ -4,13 +4,22 @@
   "type": "module",
   "scripts": {
     "serve": "node scripts/serve.mjs",
-    "test": "node --test tests/*.test.mjs",
+    "test": "node --test tests/*.test.mjs viewer/tests/*.test.mjs",
     "build": "node scripts/build.mjs",
     "content": "node scripts/build.mjs --content",
     "posters": "node scripts/posters.mjs",
     "test:browser": "node tests/browser.mjs",
     "test:scenes": "node tests/framing-browser.mjs",
-    "test:mobile": "node tests/mobile-browser.mjs"
+    "test:mobile": "node tests/mobile-browser.mjs",
+    "test:viewer": "node viewer/tests/browser.mjs",
+    "test:markers": "node viewer/tests/markers-browser.mjs",
+    "test:controls": "node viewer/tests/top-controls-browser.mjs",
+    "test:measurements": "node viewer/tests/measurements-browser.mjs",
+    "test:route-clear": "node viewer/tests/route-clear-browser.mjs",
+    "test:i18n": "node viewer/tests/i18n-browser.mjs",
+    "test:fullscreen-labels": "node viewer/tests/fullscreen-labels-browser.mjs"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  }
 }

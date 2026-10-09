@@ -43,46 +43,49 @@ try {
   await page.mouse.move(0, 0);
   await page.waitForFunction(() => document.getElementById('scene-status').textContent.includes('Pinch'), null, { timeout: 20000 }).catch(async error => {
     console.log('Gallery status:', await page.locator('#scene-status').innerText(), 'errors:', await page.locator('#scene-error').textContent());
-    console.log('Frames:', await Promise.all(page.frames().map(async frame => ({ url: frame.url(), text: (await frame.locator('body').innerText()).slice(0, 500), state: await frame.evaluate(() => ({ pointer: matchMedia('(pointer: coarse)').matches, orienting: document.documentElement.hasAttribute('data-orienting'), loaded: !!window.app?.root.findComponents('gsplat').length })) }))));
+    console.log('Frames:', await Promise.all(page.frames().map(async frame => ({ url: frame.url(), text: (await frame.locator('body').innerText()).slice(0, 500), state: await frame.evaluate(async () => ({ pointer: matchMedia('(pointer: coarse)').matches, orienting: document.documentElement.hasAttribute('data-orienting'), loaded: !!window.testController?.viewer?.app.root.findComponents('gsplat').length })) }))));
     throw error;
   });
-  const iframe = await page.locator('iframe').elementHandle();
-  const frame = await iframe.contentFrame();
+  let iframe = await page.locator('iframe').elementHandle();
+  let frame = await iframe.contentFrame();
+  await frame.evaluate(async () => { window.testController = (await import("./app.js")).controller; });
   await page.locator('iframe').scrollIntoViewIfNeeded();
-  const pose = () => frame.evaluate(() => {
-    const camera = window.app.root.findComponents('camera')[0];
+  const pose = () => frame.evaluate(async () => {
+    const camera = window.testController.viewer.app.root.findComponents('camera')[0];
     const p = camera.entity.getPosition(); return [p.x, p.y, p.z];
   });
   const before = await pose();
   const box = await frame.locator('canvas').boundingBox();
   const x = box.x + box.width / 2, y = box.y + box.height * .5;
-  const cdp = await context.newCDPSession(page);
+  let cdp = await context.newCDPSession(page);
   await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 2 });
-  assert.equal(await frame.evaluate(() => { const c = document.querySelector('canvas').getBoundingClientRect(); return document.elementFromPoint(c.width/2, c.height*.5).tagName; }), 'CANVAS', 'touch area must be clear of controls');
+  assert.equal(await frame.evaluate(async () => { const c = document.querySelector('canvas').getBoundingClientRect(); return document.elementFromPoint(c.width/2, c.height*.5).tagName; }), 'CANVAS', 'touch area must be clear of controls');
   const touch = (type, points) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: points.map(([px, py], id) => ({ x: px, y: py, id, radiusX: 2, radiusY: 2, force: 1 })) });
   await touch('touchStart', [[x, y]]);
   for (let step = 1; step <= 8; step++) { await touch('touchMove', [[x + step * 8, y - step * 3]]); await page.evaluate(() => new Promise(resolve => requestAnimationFrame(resolve))); }
   await touch('touchEnd', []);
   await frame.waitForFunction(previous => {
-    const p = window.app.root.findComponents('camera')[0].entity.getPosition();
+    const p = window.testController.viewer.app.root.findComponents('camera')[0].entity.getPosition();
     return Math.hypot(p.x-previous[0],p.y-previous[1],p.z-previous[2]) > .01;
   }, before);
   console.log('PASS: touch orbit');
   const rotated = await pose();
+  await page.waitForTimeout(500); // Separate gestures from the engine's double-tap fullscreen shortcut.
   await touch('touchStart', [[x - 25, y], [x + 25, y]]);
   for (let step = 1; step <= 6; step++) await touch('touchMove', [[x - 25 - step * 5, y], [x + 25 + step * 5, y]]);
   await touch('touchEnd', []);
   await frame.waitForFunction(previous => {
-    const p = window.app.root.findComponents('camera')[0].entity.getPosition();
+    const p = window.testController.viewer.app.root.findComponents('camera')[0].entity.getPosition();
     return Math.hypot(p.x-previous[0],p.y-previous[1],p.z-previous[2]) > .01;
   }, rotated);
   console.log('PASS: pinch zoom');
   const zoomed = await pose();
+  await page.waitForTimeout(500);
   await touch('touchStart', [[x - 25, y], [x + 25, y]]);
   for (let step = 1; step <= 6; step++) await touch('touchMove', [[x - 25, y + step * 4], [x + 25, y + step * 4]]);
   await touch('touchEnd', []);
   await frame.waitForFunction(previous => {
-    const p = window.app.root.findComponents('camera')[0].entity.getPosition();
+    const p = window.testController.viewer.app.root.findComponents('camera')[0].entity.getPosition();
     return Math.hypot(p.x-previous[0],p.y-previous[1],p.z-previous[2]) > .01;
   }, zoomed);
   console.log('PASS: two finger pan');
@@ -96,17 +99,42 @@ try {
   };
   await checkButtons();
   await page.screenshot({ path: `${output}/touch-scene.png`, fullPage: true });
+  // Use fresh pages for device orientations: Windows headless Chromium can retain
+  // a native fullscreen window state after synthesized multi-touch gestures.
+  await page.close();
+  page = await context.newPage();
+  page.on('pageerror', error => errors.push(error.message));
   await page.setViewportSize({ width: 844, height: 390 });
-  await frame.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await page.goto(base);
+  await page.locator('#open-scene').tap();
+  await page.waitForFunction(() => document.getElementById('scene-status').textContent.includes('Pinch'));
+  iframe = await page.locator('iframe').elementHandle();
+  frame = await iframe.contentFrame();
   await checkButtons();
-  await page.setViewportSize({ width: 390, height: 844 });
+  await page.close();
+  page = await context.newPage();
+  page.on('pageerror', error => errors.push(error.message));
+  await page.goto(base);
+  await page.locator('#open-scene').tap();
+  await page.waitForFunction(() => document.getElementById('scene-status').textContent.includes('Pinch'));
+  // Verify native tap activation before mixing Playwright taps with raw CDP scrolling.
+  await page.locator('#close-scene').tap();
+  await page.locator('iframe').waitFor({ state: 'detached' });
+  await page.locator('#open-scene').tap();
+  await page.waitForFunction(() => document.getElementById('scene-status').textContent.includes('Pinch'));
+  cdp = await context.newCDPSession(page);
+  await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 2 });
   await page.locator('#close-scene').scrollIntoViewIfNeeded();
   await page.evaluate(() => scrollTo(0, 0));
   await touch('touchStart', [[12, 650]]);
   for (let step = 1; step <= 8; step++) await touch('touchMove', [[12, 650 - step * 35]]);
   await touch('touchEnd', []);
   await page.waitForFunction(() => scrollY > 0);
-  await page.locator('#close-scene').tap();
+  // Chromium suppresses compatibility clicks after raw CDP scroll gestures.
+  // Close via keyboard here; native touch close was verified before those gestures.
+  await page.locator('#close-scene').focus();
+  await page.keyboard.press('Enter');
+  await page.locator('iframe').waitFor({ state: 'detached' });
   assert.equal(await page.locator('iframe').count(), 0);
   console.log('PASS: real SOG on touch emulation: orbit, pinch, pan, orientation, 44px buttons, page scroll, close');
   assert.deepEqual(errors, []);
@@ -121,7 +149,7 @@ try {
   console.log('PASS: built site exposes SEO and seven descriptions without JavaScript');
 
   const unavailable = await browser.newPage();
-  await unavailable.addInitScript(() => {
+  await unavailable.addInitScript(async () => {
     Object.defineProperty(navigator, 'gpu', { value: undefined });
     const original = HTMLCanvasElement.prototype.getContext;
     HTMLCanvasElement.prototype.getContext = function(type, ...args) {
@@ -141,7 +169,7 @@ try {
     const broken = await browser.newPage();
     const uncaught = [];
     broken.on('pageerror', error => uncaught.push(error.message));
-    if (failure === 'module') await broken.route('**/viewer/index.js', route => route.fulfill({ status: 404, body: '' }));
+    if (failure === 'module') await broken.route('**/viewer/vendor/index.js', route => route.fulfill({ status: 404, body: '' }));
     else await broken.route('**/scenes/ch.sog', route => route.fulfill({ status: 200, contentType: 'application/octet-stream', body: 'invalid scene archive' }));
     await broken.goto(base);
     await broken.locator('#open-scene').click();
