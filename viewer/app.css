@@ -108,3 +108,57 @@ body[data-dragging] #scene-host { outline: 4px dashed #b9efc8; outline-offset: -
 .sse-viewer .sse-ui .sse-spacer,
 .sse-viewer .sse-ui .sse-controlsWrap,
 .sse-viewer .sse-ui .sse-buttonsContainer { pointer-events: none; }
+
+.compact-action-label { display: none; }
+html[data-compact-menu] #scene-tools { z-index: 8; }
+html[data-compact-ui] #scene-tools {
+  position: fixed; top: calc(var(--compact-top) + max(8px, env(safe-area-inset-top))); left: calc(var(--compact-left) + max(8px, env(safe-area-inset-left)));
+  right: calc(var(--compact-right) + max(8px, env(safe-area-inset-right))); gap: 0;
+}
+html[data-compact-ui] #fit-controls { display: none; }
+html[data-compact-ui] #scene-controls {
+  position: fixed; top: calc(var(--compact-top) + max(8px, env(safe-area-inset-top)) + 52px);
+  left: calc(var(--compact-left) + max(8px, env(safe-area-inset-left))); right: calc(var(--compact-right) + max(8px, env(safe-area-inset-right)));
+  width: auto; max-height: none; align-items: flex-start;
+}
+html[data-compact-ui] #measurement-summary { padding: 4px 8px; font-size: 12px; }
+html[data-compact-panel] #measurement-summary { display: none; }
+html[data-compact-ui] #compact-menu {
+  display: block; position: absolute; top: 52px; left: 0; z-index: 10;
+  box-sizing: border-box; width: min(320px, 100%);
+  max-height: max(44px, calc(var(--compact-height) - 76px));
+  overflow: auto; overscroll-behavior: contain; padding: 8px;
+  background: #101517; border: 1px solid #4a5f52; border-radius: 8px;
+  pointer-events: auto;
+}
+html[data-compact-ui] #compact-menu .icon-toolbar,
+html[data-compact-ui] #compact-menu #route-tools { display: flex; flex-direction: column; width: 100%; background: transparent; overflow: visible; }
+html[data-compact-ui] #compact-menu :is(button, .icon-toggle) {
+  display: flex; justify-content: flex-start; gap: 12px; width: 100%; min-width: 44px;
+  flex: 0 0 auto; height: auto; min-height: 44px; padding: 8px; border-radius: 4px;
+}
+html[data-compact-ui] #compact-menu .compact-action-label { display: inline; text-align: left; }
+html[data-compact-ui] #compact-menu svg { flex-shrink: 0; }
+html[data-compact-ui] #marker-editor,
+html[data-compact-ui] #scale-editor {
+  position: fixed; left: calc(var(--compact-left, 0px) + max(8px, env(safe-area-inset-left))); right: calc(var(--compact-right, 0px) + max(8px, env(safe-area-inset-right)));
+  bottom: calc(var(--compact-bottom, 0px) + max(8px, env(safe-area-inset-bottom)));
+  width: auto; max-height: calc(var(--compact-height) * .6 - 16px);
+  overscroll-behavior: contain;
+}
+html[data-compact-ui] #marker-editor { display: flex; flex-direction: column; overflow: hidden; }
+html[data-compact-ui] #marker-editor-fields { min-height: 0; overflow: auto; overscroll-behavior: contain; }
+html[data-compact-ui] #marker-editor-header,
+html[data-compact-ui] #marker-actions { flex-shrink: 0; }
+html[data-compact-ui] #marker-save-status { min-width: 0; overflow-wrap: anywhere; }
+html[data-compact-ui] #scale-actions { position: sticky; bottom: 0; background: #101517; }
+html[data-short-ui][data-compact-editor] #scene-tools,
+html[data-short-ui][data-compact-editor] #toolbar,
+html[data-short-ui][data-compact-scale-entry] #scene-tools,
+html[data-short-ui][data-compact-scale-entry] #toolbar { display: none; }
+html[data-short-ui] #marker-editor,
+html[data-short-ui] #scale-editor:has(#scale-fields:not([hidden])) { max-height: calc(var(--compact-height) - 16px); }
+html[data-short-ui][data-compact-editor] #marker-editor { height: calc(var(--compact-height) - 16px); }
+html[data-compact-panel] .sse-controlsWrap { visibility: hidden !important; pointer-events: none !important; }
+html[data-compact-panel] .sse-controlsWrap * { pointer-events: none !important; }
+html[data-compact-panel] .sse-controlsHint { display: none !important; }

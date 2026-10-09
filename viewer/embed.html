@@ -12,6 +12,11 @@
   <main id="scene-host" data-i18n-aria-label="scene.label"></main>
   <div id="empty-state"><span data-i18n="scene.empty"></span><br><small data-i18n="scene.privacy"></small></div>
   <div id="scene-tools">
+  <section id="compact-actions" class="icon-toolbar" hidden>
+    <button id="compact-fullscreen" type="button" data-i18n-aria-label="scene.fullscreen" data-i18n-title="scene.fullscreen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3H3v6m12-6h6v6M3 15v6h6m6 0h6v-6"/></svg></button>
+    <button id="compact-more" type="button" aria-expanded="false" aria-controls="compact-menu" data-i18n-aria-label="scene.more" data-i18n-title="scene.more"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>
+  </section>
+  <div id="compact-menu" class="icon-toolbar" data-i18n-aria-label="scene.more" hidden></div>
   <section id="file-controls" class="icon-toolbar" data-i18n-aria-label="scene.files">
     <button id="open-scene" type="button" data-i18n-aria-label="scene.open" data-i18n-title="scene.open"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V5h6l2 2h10v4M3 7v13h16l3-9H7l-4 9"/></svg></button>
     <input id="scene-file" type="file" accept=".ply,.sog" hidden>
@@ -64,6 +69,7 @@
       <strong id="marker-editor-title"></strong>
       <button id="close-marker-editor" type="button" data-i18n-aria-label="marker.closeEditor" data-i18n-title="marker.closeEditor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
     </div>
+    <div id="marker-editor-fields">
     <div id="marker-name-wrap"><label for="marker-name" data-i18n="marker.name"></label><input id="marker-name" type="text"></div>
     <div id="marker-type-label" class="editor-label" data-i18n="marker.type"></div>
     <div id="marker-type" class="icon-toolbar" role="group" aria-labelledby="marker-type-label">
@@ -73,6 +79,7 @@
     <div id="marker-palette" role="group" data-i18n-aria-label="marker.color"></div>
     <label for="marker-note" data-i18n="marker.note"></label>
     <textarea id="marker-note" rows="4" data-i18n-placeholder="marker.notePlaceholder"></textarea>
+    </div>
     <div id="marker-actions">
       <button id="save-marker" type="button" data-i18n="action.save"></button>
       <span id="marker-save-status" role="status" aria-live="polite"></span>

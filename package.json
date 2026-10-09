@@ -14,6 +14,7 @@
     "test:viewer": "node viewer/tests/browser.mjs",
     "test:markers": "node viewer/tests/markers-browser.mjs",
     "test:controls": "node viewer/tests/top-controls-browser.mjs",
+    "test:compact": "node viewer/tests/compact-ui-browser.mjs",
     "test:measurements": "node viewer/tests/measurements-browser.mjs",
     "test:route-clear": "node viewer/tests/route-clear-browser.mjs",
     "test:i18n": "node viewer/tests/i18n-browser.mjs",

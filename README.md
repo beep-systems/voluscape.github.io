@@ -43,6 +43,7 @@ npm run test:mobile
 npm run test:viewer
 npm run test:markers
 npm run test:controls
+npm run test:compact
 npm run test:fullscreen-labels
 npm run test:measurements
 npm run test:route-clear

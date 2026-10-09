@@ -9,6 +9,7 @@
     "test:browser": "node tests/browser.mjs",
     "test:markers": "node tests/markers-browser.mjs",
     "test:controls": "node tests/top-controls-browser.mjs",
+    "test:compact": "node tests/compact-ui-browser.mjs",
     "test:fullscreen-labels": "node tests/fullscreen-labels-browser.mjs",
     "test:measurements": "node tests/measurements-browser.mjs",
     "test:route-clear": "node tests/route-clear-browser.mjs",

@@ -2,7 +2,7 @@ import { createI18n, applyTranslations } from './i18n.js';
 import { createViewer } from './vendor/index.js';
 import { SceneController } from './controller.js';
 import { markerPalette } from './markers.js';
-import { TopControls } from './top-controls.js';
+import { TopControls, CompactControls } from './top-controls.js';
 
 export const i18n = createI18n(new URL(location.href).searchParams.get('lang'));
 const { t, formatNumber } = i18n;
@@ -24,10 +24,10 @@ export const controller = new SceneController(host, {
 });
 let levelMessage = '';
 let editingId = null, draftColor = 'red', editingType = null;
-const compactViewport = window.matchMedia('(max-width: 768px), (max-height: 480px)');
 let editorSuppressed = false;
 controller.addEventListener('markerselection', event => {
-  editorSuppressed = event.detail.source === 'creation' && compactViewport.matches;
+  const bounds = host.getBoundingClientRect();
+  editorSuppressed = event.detail.source === 'creation' && (bounds.width <= 768 || bounds.height <= 480);
 });
 const palette = find('marker-palette');
 const showDraftColor = () => {
@@ -240,4 +240,6 @@ render();
 const topControls = new TopControls(controller, {
   tools: find('scene-tools'), toolbar: find('toolbar'), summary: find('measurement-summary'), editor: find('marker-editor'), calibration: find('scale-editor'), dialog: find('delete-route-dialog')
 });
+const compactControls = new CompactControls(controller, { t, activity: () => topControls.activity() });
+window.addEventListener('pagehide', () => compactControls.destroy(), { once: true });
 window.addEventListener('pagehide', () => topControls.destroy(), { once: true });
